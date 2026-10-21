@@ -780,7 +780,7 @@
     const line = vh() * 0.3;
     let i = -1;
     projs.forEach((p, k) => { if (p.getBoundingClientRect().top <= line) i = k; });
-    const pastEnd = contact.getBoundingClientRect().top < vh() * 0.5;
+    const pastEnd = contact.offsetParent !== null && contact.getBoundingClientRect().top < vh() * 0.5;
     bar.classList.toggle('show', i >= 0 && !pastEnd);
     if (i < 0) return;
     if (i !== cur) {
