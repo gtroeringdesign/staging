@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GTRoering Design</title>
 <meta name="description" content="Grivin Roering, industrial design engineer in Johannesburg. Concept to CAD to CNC to installed.">
@@ -20,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
-<link rel="stylesheet" href="site.css?v=8">
+<link rel="stylesheet" href="site.css?v=10">
 <style>
   :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
   [hidden] { display: none !important; }
@@ -487,6 +488,35 @@
   addEventListener('resize', () => { layoutWork(); onScroll(); });
   wide.addEventListener?.('change', () => { layoutWork(); onScroll(); });
   window.addEventListener('load', () => { layoutWork(); onScroll(); });
+  /* Sideways input on the project row: a sideways trackpad scroll or a sideways swipe
+     moves through the projects the same way scrolling down does */
+  const stage = work.querySelector('.work-stage');
+  const inRow = () => { if (!pinned) return false; const r = work.getBoundingClientRect(); return r.top <= 1 && r.bottom >= vh() - 1; };
+  stage.addEventListener('wheel', e => {
+    if (!inRow() || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    const r = work.getBoundingClientRect();
+    const atStart = r.top >= 0 && e.deltaX < 0, atEnd = r.bottom <= vh() && e.deltaX > 0;
+    if (atStart || atEnd) return;
+    e.preventDefault();
+    scrollBy({ top: e.deltaMode === 1 ? e.deltaX * 16 : e.deltaX, behavior: 'instant' });
+  }, { passive: false });
+  let tx = null, ty = null, sideways = null;
+  stage.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    tx = t.clientX; ty = t.clientY; sideways = null;
+    if (tx < 24 || tx > innerWidth - 24) tx = null;   /* leave the phone's edge back-swipe alone */
+  }, { passive: true });
+  stage.addEventListener('touchmove', e => {
+    if (tx === null || !inRow()) return;
+    const t = e.touches[0], dx = t.clientX - tx, dy = t.clientY - ty;
+    if (sideways === null && Math.abs(dx) + Math.abs(dy) > 8) sideways = Math.abs(dx) > Math.abs(dy);
+    if (!sideways) return;
+    e.preventDefault();
+    scrollBy({ top: -dx * 1.4, behavior: 'instant' });
+    tx = t.clientX; ty = t.clientY;
+  }, { passive: false });
+  stage.addEventListener('touchend', () => { tx = null; sideways = null; }, { passive: true });
+
   layoutWork(); frameAll();
 })();
 </script>

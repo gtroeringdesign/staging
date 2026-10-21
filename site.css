@@ -686,3 +686,19 @@ iframe.yt-frame { display: block; border: 0; width: 100%; height: 100%; backgrou
   .work.is-pinned .card .usp { display: none; }
   .work.is-pinned .work-progress { left: 16px; right: 16px; }
 }
+
+/* Project row: cards line up along the top instead of centring on their own height */
+.work.is-pinned .work-track { align-items: flex-start; }
+.work.is-pinned .work-intro, .work.is-pinned .work-outro { align-self: center; }
+
+/* Phones: the project bar becomes a small floating "Index" button, bottom right */
+@media (max-width: 899px) {
+  .now-bar { top: auto; left: auto; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    background: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+    transform: translateY(12px); opacity: 0; pointer-events: none; transition: transform 0.3s ease, opacity 0.3s ease; }
+  .now-bar.show { transform: none; opacity: 1; pointer-events: auto; }
+  .now-bar .inner { padding: 0; width: auto; max-width: none; margin: 0; }
+  .now-bar .label, .now-bar .bar { display: none; }
+  .now-bar a { display: inline-flex; align-items: center; gap: 6px; padding: 12px 16px; border-radius: 999px;
+    background: var(--ink); color: var(--ground, #F2F0EB); box-shadow: 0 6px 20px rgba(31, 30, 27, 0.25); }
+}
