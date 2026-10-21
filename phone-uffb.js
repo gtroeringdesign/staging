@@ -11,7 +11,7 @@
   const css = `
   .m-track { display: flex; gap: 32px; overflow-x: auto; overflow-y: hidden; align-items: flex-start;
     scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
-    padding-block: 0 8px !important; transition: height 0.45s cubic-bezier(.2,.7,.2,1); }
+    padding-block: 0 8px !important; }
   .m-track::-webkit-scrollbar { display: none; }
   .m-track > .m-panel { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; min-height: 0; opacity: 1; }
   .pstory.m-row .pch { padding-block: 8px 20px; }
@@ -68,7 +68,8 @@
     }, { passive: true });
     return row;
   }
-  function size(row) { row.track.style.height = row.panels[row.cur].offsetHeight + 8 + 'px'; }
+  /* Every section in a row gets the height of the tallest one, so swiping never changes the page length */
+  function size(row) { row.track.style.height = Math.max(...row.panels.map(p => p.offsetHeight)) + 8 + 'px'; }
   function setActive(row, i, bringIntoView) {
     row.cur = i;
     row.tabs.forEach((b, k) => b.classList.toggle('on', k === i));
