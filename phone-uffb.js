@@ -107,17 +107,37 @@
   /* While you are in a row of sections, what comes after it stays out of sight until you have
      reached the last section once. After that the page scrolls freely. Only content below the
      row is hidden, so what you are looking at never jumps. */
-  let held = null;
+  let held = null, jumping = false, jumpT;
+  function release() { if (held) held.after.forEach(el => el.classList.remove('m-hold')); held = null; }
   function hold() {
+    if (jumping) return;                      /* never hide anything while a link is taking you somewhere */
     const nav = document.querySelector('.nav').getBoundingClientRect().bottom;
-    const cur = holdRows.find(r => { const b = r.track.getBoundingClientRect(); return b.top < innerHeight && b.bottom > nav; });
-    const want = cur && !cur.done ? cur : null;
-    if (want === held) return;
-    if (held) held.after.forEach(el => el.classList.remove('m-hold'));
-    if (want) want.after.forEach(el => el.classList.add('m-hold'));
-    held = want;
+    if (held) {                               /* keep holding while you are still in that row */
+      const b = held.track.getBoundingClientRect();
+      if (!held.done && b.top < innerHeight && b.bottom > nav) return;
+      release();
+    }
+    /* start holding only if what would be hidden is still below the screen, so nothing you see disappears */
+    const want = holdRows.find(r => {
+      if (r.done) return false;
+      const b = r.track.getBoundingClientRect();
+      if (!(b.top < innerHeight && b.bottom > nav)) return false;
+      const first = r.after.find(el => el.offsetParent !== null);
+      return !first || first.getBoundingClientRect().top >= innerHeight;
+    });
+    if (want) { want.after.forEach(el => el.classList.add('m-hold')); held = want; }
   }
-  addEventListener('scroll', hold, { passive: true });
+  addEventListener('scroll', () => {
+    if (jumping) { clearTimeout(jumpT); jumpT = setTimeout(() => { jumping = false; hold(); }, 250); return; }
+    hold();
+  }, { passive: true });
+  /* Links within the page (project list, Index button, Next project): show everything, go there, then resume */
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    jumping = true; release();
+    clearTimeout(jumpT); jumpT = setTimeout(() => { jumping = false; hold(); }, 1500);
+  }, true);
 
   /* About page: the rest of the page waits until you have reached chapter 06 */
   const story = document.querySelector('.story');
