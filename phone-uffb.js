@@ -13,7 +13,7 @@
     scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
     padding-block: 0 8px !important; }
   .m-track::-webkit-scrollbar { display: none; }
-  .m-track > .m-panel { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; min-height: 0; opacity: 1; }
+  .m-track > .m-panel { flex: 0 0 100%; scroll-snap-align: none start; scroll-snap-stop: always; min-height: 0; opacity: 1; }
   .pstory.m-row .pch { padding-block: 8px 20px; }
   .story.m-row .chapter { padding-block: 8px 20px; }
   .pstory.m-row .pch-figs.mrow { overflow: visible; display: flex; gap: 8px; }
@@ -57,6 +57,21 @@
         if (e.isIntersecting && !reduce) { h.classList.add('nudge'); o.disconnect(); }
       }), { threshold: 1 }).observe(h);
     }
+    /* A sideways swipe must never move the page up or down. Some phones nudge the page while the
+       row snaps into place; if that happens during a sideways swipe, put the page back. */
+    let sx = 0, sy = 0, keepY = null, sideways = false, keepT;
+    track.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; keepY = scrollY; sideways = false; }, { passive: true });
+    track.addEventListener('touchmove', e => {
+      const dx = Math.abs(e.touches[0].clientX - sx), dy = Math.abs(e.touches[0].clientY - sy);
+      if (dx > 10 && dx > dy * 1.5) sideways = true;
+    }, { passive: true });
+    track.addEventListener('touchend', () => {
+      if (!sideways) { keepY = null; return; }
+      clearTimeout(keepT); keepT = setTimeout(() => { keepY = null; }, 900);
+    }, { passive: true });
+    addEventListener('scroll', () => {
+      if (sideways && keepY !== null && Math.abs(scrollY - keepY) > 2) scrollTo({ top: keepY, behavior: 'instant' });
+    }, { passive: true });
     let t;
     track.addEventListener('scroll', () => {
       clearTimeout(t);
