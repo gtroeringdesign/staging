@@ -63,7 +63,7 @@
       t = setTimeout(() => {
         const step = panels[1] ? panels[1].offsetLeft - panels[0].offsetLeft : 1;
         const i = Math.max(0, Math.min(panels.length - 1, Math.round(track.scrollLeft / step)));
-        if (i !== row.cur) setActive(row, i, true);
+        if (i !== row.cur) setActive(row, i, false);   /* a swipe never moves the page up or down */
       }, 90);
     }, { passive: true });
     return row;
