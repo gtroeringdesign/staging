@@ -9,11 +9,11 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const css = `
-  .m-track { display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; align-items: flex-start;
+  .m-track { display: flex; gap: 32px; overflow-x: auto; overflow-y: hidden; align-items: flex-start;
     scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
     padding-block: 0 8px !important; transition: height 0.45s cubic-bezier(.2,.7,.2,1); }
   .m-track::-webkit-scrollbar { display: none; }
-  .m-track > .m-panel { flex: 0 0 88%; scroll-snap-align: start; scroll-snap-stop: always; min-height: 0; opacity: 1; }
+  .m-track > .m-panel { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; min-height: 0; opacity: 1; }
   .pstory.m-row .pch { padding-block: 8px 20px; }
   .story.m-row .chapter { padding-block: 8px 20px; }
   .pstory.m-row .pch-figs.mrow { overflow: visible; display: flex; gap: 8px; }
@@ -31,7 +31,6 @@
   .m-hint svg { width: 64px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1; overflow: visible; }
   .m-hint.nudge svg { animation: m-nudge 1.8s ease-in-out 3; }
   @keyframes m-nudge { 0%, 100% { transform: none; } 50% { transform: translateX(8px); } }
-  .proj-next { display: none !important; }
   .m-hold { display: none !important; }
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -74,7 +73,7 @@
     row.cur = i;
     row.tabs.forEach((b, k) => b.classList.toggle('on', k === i));
     size(row);
-    if (i === row.panels.length - 1 && row.onBuild) row.onBuild();
+    if (i === row.panels.length - 1) { row.done = true; if (row.onBuild) row.onBuild(); }
     if (bringIntoView) {                      /* new section: show its start if you were further down */
       const nav = document.querySelector('.nav').getBoundingClientRect().bottom;
       const top = row.tabsEl.getBoundingClientRect().top;
@@ -89,7 +88,7 @@
   const rows = [];
 
   /* Projects page */
-  const projRows = [];
+  const holdRows = [];
   document.querySelectorAll('.proj').forEach((proj, n) => {
     const story = proj.querySelector('.pstory');
     if (!story) return;
@@ -98,17 +97,20 @@
       n === 0, () => hold());
     /* everything below this project's sections: the following projects and the contact section */
     row.after = [];
+    const nextLink = proj.querySelector('.proj-next');
+    if (nextLink) row.after.push(nextLink);
     for (let el = proj.nextElementSibling; el; el = el.nextElementSibling) row.after.push(el);
-    rows.push(row); projRows.push(row);
+    rows.push(row); holdRows.push(row);
   });
 
-  /* While you are in a project's sections, the next project stays out of sight until you reach Build.
-     Only content below the sections is hidden, so what you are looking at never jumps. */
+  /* While you are in a row of sections, what comes after it stays out of sight until you have
+     reached the last section once. After that the page scrolls freely. Only content below the
+     row is hidden, so what you are looking at never jumps. */
   let held = null;
   function hold() {
     const nav = document.querySelector('.nav').getBoundingClientRect().bottom;
-    const cur = projRows.find(r => { const b = r.track.getBoundingClientRect(); return b.top < innerHeight && b.bottom > nav; });
-    const want = cur && cur.cur < cur.panels.length - 1 ? cur : null;
+    const cur = holdRows.find(r => { const b = r.track.getBoundingClientRect(); return b.top < innerHeight && b.bottom > nav; });
+    const want = cur && !cur.done ? cur : null;
     if (want === held) return;
     if (held) held.after.forEach(el => el.classList.remove('m-hold'));
     if (want) want.after.forEach(el => el.classList.add('m-hold'));
@@ -116,11 +118,14 @@
   }
   addEventListener('scroll', hold, { passive: true });
 
-  /* About page */
+  /* About page: the rest of the page waits until you have reached chapter 06 */
   const story = document.querySelector('.story');
   if (story) {
-    rows.push(makeRow(story, story.querySelector('.story-text'), [...story.querySelectorAll('.chapter')],
-      (p, i) => `<b>${String(i + 1).padStart(2, '0')}</b>`, true, null));
+    const row = makeRow(story, story.querySelector('.story-text'), [...story.querySelectorAll('.chapter')],
+      (p, i) => `<b>${String(i + 1).padStart(2, '0')}</b>`, true, () => hold());
+    row.after = [];
+    for (let el = story.nextElementSibling; el; el = el.nextElementSibling) row.after.push(el);
+    rows.push(row); holdRows.push(row);
   }
 
   const sizeAll = () => rows.forEach(size);
