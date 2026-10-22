@@ -548,7 +548,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--signal); outlin
   .pstory.pinned .pstory-frame { max-height: calc(100svh - 200px); }
   .pstory.pinned .pstory-frame .pf { opacity: 1; transform: none; clip-path: inset(0 0 0 100%); z-index: 1; background: var(--panel);
     transition: clip-path 0.85s cubic-bezier(.7, 0, .2, 1); }
-  .pstory.pinned .pstory-frame[data-dir="back"] img { clip-path: inset(0 100% 0 0); }
+  .pstory.pinned .pstory-frame[data-dir="back"] .pf { clip-path: inset(0 100% 0 0); }
   .pstory.pinned .pstory-frame .pf.on { clip-path: inset(0); z-index: 3; }
   .pstory.pinned .pstory-frame .pf.was { clip-path: inset(0); z-index: 2; transition: none; }
   .pstory.pinned .pstory-text { padding: 0; display: grid; align-items: center; max-height: calc(100svh - 140px); }
