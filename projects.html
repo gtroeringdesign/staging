@@ -714,11 +714,15 @@
   }
   function show(s, target) {
     if (target === s.cur) return;
+    const next = s.imgs[target];
+    next.style.transition = 'none';           /* park the incoming image at its start edge, without animating */
     s.frame.dataset.dir = target > s.cur ? 'fwd' : 'back';
     s.imgs.forEach(im => im.classList.remove('was'));
     stopVideos(s.imgs[s.cur]);
     s.imgs[s.cur].classList.remove('on'); s.imgs[s.cur].classList.add('was');
-    s.imgs[target].classList.add('on');
+    void next.offsetWidth;                    /* then wipe it in, in either scroll direction */
+    next.style.transition = '';
+    next.classList.add('on');
     s.cur = target;
     const ch = +s.imgs[target].dataset.ch;
     s.chs.forEach((c, k) => c.classList.toggle('on', k === ch));
